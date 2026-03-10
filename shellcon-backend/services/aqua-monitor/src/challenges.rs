@@ -71,7 +71,7 @@ pub async fn get_tank_readings(
         io_duration_ms = io_duration,
         "Tank configuration file I/O completed"
     );
-    // ⚠️ END CHALLENGE CODE ⚠️
+    // ⚠️ END CHALLENGE #1 CODE ⚠️
 
     // First, check if the tank exists
     if tank_id.is_empty() {
@@ -114,7 +114,7 @@ pub async fn get_tank_readings(
     let total_duration = start.elapsed().as_millis();
     tracing::info!(
         request_id = %request_id,
-        tank_id = %tank_id, 
+        tank_id = %tank_id,
         total_duration_ms = total_duration,
         io_duration_ms = io_duration,
         db_duration_ms = db_duration,
@@ -134,7 +134,7 @@ pub async fn get_tank_readings(
 }
 
 /// Retrieves the current status of all tank sensors.
-/// 
+///
 /// This endpoint demonstrates the use of a shared HTTP client to prevent resource leaks.
 /// It's part of Challenge #4 in the Rust learning path.
 ///
@@ -156,18 +156,18 @@ pub async fn get_sensor_status(State(_state): State<AppState>) -> impl IntoRespo
     //   1. Store the client in AppState (recommended for Axum apps)
     //   2. Use a static client with once_cell/lazy_static
     //   3. Or another approach that avoids creating a new client per request
-    
+
     // ORIGINAL PROBLEMATIC CODE: Create a new client for every request
-    let client = reqwest::Client::new(); 
-    
+    let client = reqwest::Client::new();
+
     // Log that we are creating a new client
     tracing::info!(
         request_id = %request_id,
         "Creating new HTTP client for request (Challenge #4 unsolved)"
     );
 
-    // ⚠️ END CHALLENGE CODE ⚠️
-    
+    // ⚠️ END CHALLENGE #4 CODE ⚠️
+
     // In a real application, this would be an actual sensor API endpoint
     let sensor_data = || json!({
         "status": "online",
@@ -177,7 +177,7 @@ pub async fn get_sensor_status(State(_state): State<AppState>) -> impl IntoRespo
 
     // Try to get sensor data from external API
     match client
-        .get("https://api.example.com/sensors") 
+        .get("https://api.example.com/sensors")
         .timeout(Duration::from_secs(2))
         .send()
         .await

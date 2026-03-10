@@ -166,19 +166,19 @@ async fn validate_challenge_solution(
 
     // Get the file content to check implementation patterns
     tracing::info!("Working directory: {:?}", std::env::current_dir());
-    
+
     // Read the challenges.rs file where the implementation is
     let source_path = std::env::current_dir()
         .unwrap_or_else(|_| std::path::PathBuf::from("."))
         .join("src/challenges.rs");
-    
+
     // Log the full source path for debugging
     tracing::info!(
         request_id = %request_id,
         source_path = %source_path.display(),
         "Full source path for validation"
     );
-    
+
     // Read the source code file
     let challenge_file = match fs::read_to_string(&source_path) {
         Ok(content) => content,
@@ -195,33 +195,33 @@ async fn validate_challenge_solution(
             })));
         }
     };
-    
+
     // Extract the challenge code between the markers (case insensitive and allowing for spacing variations)
     // We look for both actual markers or comments mentioning them
     let markers = [
-        "// ⚠️ CHALLENGE #1: ASYNC I/O ⚠️", 
+        "// ⚠️ CHALLENGE #1: ASYNC I/O ⚠️",
         "// CHALLENGE #1: ASYNC I/O",
         "// Challenge 1: Async I/O",
         "// Challenge 1",
         "// CHALLENGE #1"
     ];
-    
+
     let end_markers = [
-        "// ⚠️ END CHALLENGE CODE ⚠️",
+        "// ⚠️ END CHALLENGE #1 CODE ⚠️",
         "// END CHALLENGE CODE",
         "// End Challenge Code",
         "// End Challenge 1",
         "// END CHALLENGE #1"
     ];
-    
+
     let challenge_start = markers.iter()
         .filter_map(|marker| challenge_file.find(marker))
         .min();
-    
+
     let challenge_end = end_markers.iter()
         .filter_map(|marker| challenge_file.find(marker))
         .min();
-    
+
     let challenge_code = match (challenge_start, challenge_end) {
         (Some(start), Some(end)) if start < end => {
             &challenge_file[start..end]
@@ -233,7 +233,7 @@ async fn validate_challenge_solution(
             &challenge_file
         }
     };
-    
+
     // Print a snippet of the extracted challenge code for debugging
     let excerpt = if challenge_code.len() > 200 {
         &challenge_code[0..200]
@@ -241,28 +241,28 @@ async fn validate_challenge_solution(
         challenge_code
     };
     tracing::info!("Challenge code excerpt: {}", excerpt);
-    
+
     // Simple function to check if a pattern exists in uncommented code
     let is_uncommented = |pattern: &str| -> bool {
         challenge_code.lines()
             .filter(|line| !line.trim().starts_with("//"))
             .any(|line| line.contains(pattern))
     };
-    
+
     // Check for key implementation patterns
-    let uses_async_io = is_uncommented("tokio::fs") || 
-                       is_uncommented("async_std::fs") || 
-                       (is_uncommented(".await") && 
+    let uses_async_io = is_uncommented("tokio::fs") ||
+                       is_uncommented("async_std::fs") ||
+                       (is_uncommented(".await") &&
                         (is_uncommented("read_to_string") || is_uncommented("read_file")));
-    
+
     // Check for absence of blocking operations
-    let no_blocking_operations = !is_uncommented("std::thread::sleep") && 
+    let no_blocking_operations = !is_uncommented("std::thread::sleep") &&
                                !is_uncommented("std::fs::read");
 
     // Check for proper tracing implementation - be flexible about the exact approach
     let has_proper_tracing = (is_uncommented("tracing::info_span") || is_uncommented("info_span!")) &&
                             (is_uncommented(".in_scope") || is_uncommented(".instrument"));
-    
+
     // Log the key findings
     tracing::info!(
         request_id = %request_id,
@@ -271,7 +271,7 @@ async fn validate_challenge_solution(
         has_proper_tracing = has_proper_tracing,
         "Challenge validation check results"
     );
-    
+
     // All checks must pass for validation to succeed
     let is_valid = uses_async_io && no_blocking_operations && has_proper_tracing;
 
@@ -313,30 +313,30 @@ async fn validate_resource_leak_solution(
     State(_state): State<AppState>,
 ) -> impl IntoResponse {
     tracing::info!("Starting validation for Challenge #4: Resource Leak");
-    
+
     // Create a request ID for correlation in logs
     let request_id = uuid::Uuid::new_v4().to_string();
-    
+
     // For this challenge, we check if the implementation uses a static HTTP client
     let current_dir = std::env::current_dir()
         .unwrap_or_else(|_| std::path::PathBuf::from("."));
-    
+
     // Log the current directory for debugging
     tracing::info!(
         request_id = %request_id,
         current_dir = %current_dir.display(),
         "Current working directory for validation"
     );
-    
+
     let source_path = current_dir.join("src/challenges.rs");
-    
+
     // Log the full source path for debugging
     tracing::info!(
         request_id = %request_id,
         source_path = %source_path.display(),
         "Full source path for validation"
     );
-    
+
     // Read the source code file
     let source_code = match fs::read_to_string(&source_path) {
         Ok(content) => content,
@@ -358,11 +358,11 @@ async fn validate_resource_leak_solution(
             })));
         }
     };
-    
+
     // Extract just the challenge code section using the challenge markers
     let challenge_start = source_code.find("// ⚠️ CHALLENGE #4: RESOURCE LEAK ⚠️");
-    let challenge_end = source_code.find("// ⚠️ END CHALLENGE CODE ⚠️");
-    
+    let challenge_end = source_code.find("// ⚠️ END CHALLENGE #4 CODE ⚠️");
+
     // Check if we found the challenge section boundaries
     if challenge_start.is_none() || challenge_end.is_none() {
         tracing::error!(
@@ -379,10 +379,10 @@ async fn validate_resource_leak_solution(
             }
         })));
     }
-    
+
     // Extract just the challenge code section
-    let challenge_code = &source_code[challenge_start.unwrap()..challenge_end.unwrap() + "// ⚠️ END CHALLENGE CODE ⚠️".len()];
-    
+    let challenge_code = &source_code[challenge_start.unwrap()..challenge_end.unwrap() + "// ⚠️ END CHALLENGE #4 CODE ⚠️".len()];
+
     // Helper to check for uncommented patterns within the get_sensor_status function body
     let is_uncommented_in_handler = |pattern: &str| -> bool {
         challenge_code.lines() // challenge_code is the extracted get_sensor_status body
@@ -394,7 +394,7 @@ async fn validate_resource_leak_solution(
     // 1. The handler must NOT create a new reqwest::Client.
     //    We check for both "reqwest::Client::new()" and "Client::new()" to be thorough.
     let handler_avoids_new_client = !is_uncommented_in_handler("reqwest::Client::new()") && !is_uncommented_in_handler("Client::new()");
-    
+
     // 2. The handler MUST use the client from AppState.
     let handler_uses_app_state_client = is_uncommented_in_handler("state.http_client") || is_uncommented_in_handler("state.client");
 
@@ -407,7 +407,7 @@ async fn validate_resource_leak_solution(
     );
 
     let is_valid = handler_avoids_new_client && handler_uses_app_state_client;
-    
+
     let mut message = String::new();
     if is_valid {
         message = "Solution correctly implemented! HTTP client is now shared via AppState and resource-efficient.".to_string();
@@ -437,6 +437,6 @@ async fn validate_resource_leak_solution(
             "status": if is_valid { "normal" } else { "degraded" }
         }
     });
-    
+
     (StatusCode::OK, Json(response_json))
 }
